@@ -1,0 +1,10 @@
+1. cache on verifications (700 in 20 seconds turn into 4.2 after compiling 10-20 times)
+
+2. you have to use BigInt(0) instead of just *0*. the error for not using the proper constructor in the function is not very detailed 
+Error thrown at ensuring stage instead of the base case:
+> [ Error  ] cnf.scala:58:9: missing parameter type
+>                   res => res >= 0
+
+3. use @induct when defining recursive functions. It comes as a big aid when proving properties of the given recursive function and of the ones that use it.
+It can also automatically prove simple "decreases" annotations.
+            

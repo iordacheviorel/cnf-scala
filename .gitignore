@@ -1,2 +1,6 @@
 *.class
 *.log
+*.metals
+*.stainless-cache
+*.vscode
+stainless-stack-trace.txt
