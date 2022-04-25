@@ -30,4 +30,18 @@ We have to stop the verification and the counter example will not be returned.
 >                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...
 > [  Info  ] Verified: 423 / 853^Z
 
- 
+Limitations:
+
+Scala doesn't have an equivalent for the "forall" keyword from dafny which we used to generate seqs of all combinations of booleans:
+
+I am still trying to find a way to write a similar predicate with "equivalent" from formula.dfy:
+
+predicate equivalent(f1 : FormulaT, f2 : FormulaT)
+    requires validFormulaT(f1);
+    requires validFormulaT(f2);
+{
+    forall tau : seq<bool> ::
+        variablesUpTo(f1, |tau|) &&
+        variablesUpTo(f2, |tau|) ==>
+        truthValue(f1, tau) == truthValue(f2, tau)
+}
