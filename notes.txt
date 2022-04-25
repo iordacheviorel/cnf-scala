@@ -1,10 +1,33 @@
-1. cache on verifications (700 in 20 seconds turn into 4.2 after compiling 10-20 times)
+Compile: stainless *.scala
 
-2. you have to use BigInt(0) instead of just *0*. the error for not using the proper constructor in the function is not very detailed 
+1. Stainelss uses cache on verifications. Very useful when making small changes. 
+
+- 700 verifications in 20 seconds turn into 4.2 after compiling 10-20 times
+- minimum time: 1.4 seconds(all verifications are from cache)
+
+2. We have to use BigInt(0) instead of just *0*. the error for not using the proper constructor in the function is not very detailed 
 Error thrown at ensuring stage instead of the base case:
 > [ Error  ] cnf.scala:58:9: missing parameter type
 >                   res => res >= 0
+   
+3. For each failed verification stainless provides an example on which the verification does not hold.
 
-3. use @induct when defining recursive functions. It comes as a big aid when proving properties of the given recursive function and of the ones that use it.
+
+4. We should use @induct when defining recursive functions (or methods/lemmas that use them ). It comes as a big aid when proving properties of the given recursive function and of the ones that use it.
 It can also automatically prove simple "decreases" annotations.
-            
+
+For example if we don't specify that mult2_upper should be verified using induction the stainless gets stuck.
+We have to stop the verification and the counter example will not be returned.
+
+> viordache@viordache:~/disertatie/cnf-scala$ stainless *.scala
+> [  Info  ] Starting verification...
+> [  Info  ] Verified: 346 / 853^C
+> [ Error  ] Something went wrong. Underlying solver returned Unknown.
+> [Warning ]  - Result for 'postcondition' VC for mult2_upper @69:5:
+> [Warning ] x < BigInt("0") || BigInt("2") * x < BigInt("1") + pow(BigInt("2"), x)
+> [Warning ] cnf.scala:69:5:  => UNKNOWN
+>                def mult2_upper(x : BigInt) : Boolean = {
+>                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...
+> [  Info  ] Verified: 423 / 853^Z
+
+ 
