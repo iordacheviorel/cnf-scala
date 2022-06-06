@@ -44,6 +44,8 @@ package object cnf {
         && (weightOfAnds(res) <= weightOfAnds(f))
         && (countDImplies(res) < countDImplies(f))
         && forall((i : BigInt) => i == i)
+        && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft))
     )
 
     def applyRule2(f : FormulaT, orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
@@ -64,6 +66,8 @@ package object cnf {
         && (weightOfAnds(res) <= weightOfAnds(f))
         && (countDImplies(res) <= countDImplies(f))
         && (countImplies(res) < countImplies(f))
+        && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft))
     )
 
     def applyRule3(f : FormulaT, orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
@@ -82,6 +86,8 @@ package object cnf {
     } ensuring(res =>
         (validFormulaT(res))
         && (weightOfAnds(res) < weightOfAnds(f))
+        && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft))
     )
 
     def applyRule4(f : FormulaT, orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
@@ -100,6 +106,8 @@ package object cnf {
     } ensuring(res =>
         (validFormulaT(res))
         && (weightOfAnds(res) < weightOfAnds(f))
+        && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft))
     )
 
     def applyRule5(f : FormulaT, orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
@@ -124,6 +132,8 @@ package object cnf {
         && (countDImplies(res) <= countDImplies(f))
         && (countImplies(res) <= countImplies(f))
         && (countOrPairs(res, orsAboveLeft) < countOrPairs(f, orsAboveLeft))
+        && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft))
     )
 
     def applyRule6(f : FormulaT, orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
@@ -148,7 +158,9 @@ package object cnf {
         && (countDImplies(res) <= countDImplies(f))
         && (countImplies(res) <= countImplies(f))
         && (countOrPairs(res, orsAboveLeft) <= countOrPairs(f, orsAboveLeft))
-         && (countAndPairs(res, andsAboveLeft) < countAndPairs(f, andsAboveLeft))
+        && (countAndPairs(res, andsAboveLeft) < countAndPairs(f, andsAboveLeft))
+        && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft))
     )
 
     def applyRule7(f : FormulaT, orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
@@ -191,6 +203,8 @@ package object cnf {
     } ensuring(res =>
         (validFormulaT(res))
         && (weightOfAnds(res) < weightOfAnds(f))
+        && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft))
     )
 
     def applyRule9(f : FormulaT, orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
@@ -212,6 +226,8 @@ package object cnf {
     } ensuring(res =>
         (validFormulaT(res))
         && (weightOfAnds(res) < weightOfAnds(f))
+        && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft))
     )
 
 
@@ -299,7 +315,7 @@ package object cnf {
     ///// LEMMAS ////////
     /////////////////////
 
-    // @induct
+    @induct
     def mult2_upper(x : BigInt) : Boolean = {
 
         require(x >= 0)
@@ -456,7 +472,7 @@ package object cnf {
         assert (weightOfAnds(Not(Not(f1))) == pow(2, pow(2, weightOfAnds(f1))))
     }
 
-    def Rule3Or(f1 : FormulaT, f2 : FormulaT, f3 : FormulaT, andsAboveLeft : BigInt) : Unit = {
+    def Rule3Or(f1 : FormulaT, f2 : FormulaT, f3 : FormulaT) : Unit = {
 
         require (weightOfAnds(f3) < weightOfAnds(f2))
         require (weightOfAnds(f1) >= 2)
@@ -469,4 +485,201 @@ package object cnf {
         assert (weightOfAnds(f1) * weightOfAnds(f3) < weightOfAnds(f1) * weightOfAnds(f2))
     }
 
+    def measure(f : FormulaT, h1 : BigInt, h2 : BigInt) = {
+        require(h1 >= 0)
+        require(h2 >= 0)
+        
+        (weightOfAnds(f),
+            countDImplies(f),
+            countImplies(f),
+            countOrPairs(f, h1),
+            countAndPairs(f, h2))
+    }
+
+    def applyAtTop(f : FormulaT,
+        orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
+
+        require (orsAboveLeft >= 0)
+        require (andsAboveLeft >= 0)
+        require (validFormulaT(f))
+
+
+        f match {
+            case Var(v)           => f
+            // case Not(f1)          => Rule6PropAux(f1, andsAboveLeft)
+            // case Or(f1, f2)       => Rule6PropAux(f1, andsAboveLeft) && Rule6PropAux(f2, andsAboveLeft)
+            // case And(f1, f2)      => Rule6PropAux(f1, andsAboveLeft) && Rule6PropAux(f2, andsAboveLeft + 1)
+            
+            case DImplies(f1, f2) => applyRule1(f, orsAboveLeft, andsAboveLeft)
+            case Implies(f1, f2)  => applyRule2(f, orsAboveLeft, andsAboveLeft)
+
+            case Or(f1, f2)       => {
+                
+                if(f2.isInstanceOf[And]) {
+
+                    applyRule3(f, orsAboveLeft, andsAboveLeft)
+                } else if (f.isInstanceOf[And]) {
+                    applyRule5(f, orsAboveLeft, andsAboveLeft)
+                } else if (f.isInstanceOf[And]) {
+                    applyRule4(f, orsAboveLeft, andsAboveLeft)
+                } else {
+                    f
+                }
+            }
+
+            case And(f1, f2)      => {
+
+                if (f2.isInstanceOf[And]) {
+                    applyRule6(f, orsAboveLeft, andsAboveLeft)
+                } else {
+                    f
+                }
+            }
+
+            case Not(f1)          => {
+
+                if (f1.isInstanceOf[Or]) {
+                    applyRule7(f, orsAboveLeft, andsAboveLeft)
+                } else if (f1.isInstanceOf[And]) {
+                    applyRule8(f, orsAboveLeft, andsAboveLeft)
+                } else if (f1.isInstanceOf[Not]) {
+                    applyRule9(f, orsAboveLeft, andsAboveLeft)
+                } else {
+                    f
+                }
+            }
+
+        }
+
+    } ensuring(res =>
+        (validFormulaT(res))
+        && (if (f == res) !f.isInstanceOf[Implies] else true)
+        && (if (f == res) !f.isInstanceOf[DImplies] else true)
+        && (f == res || smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft)))
+    )
+
+    def Rule3UnderNot(f1 : FormulaT, f2 : FormulaT) : Unit = {
+        
+        require (weightOfAnds(f1) <  weightOfAnds(f2))
+
+        assert (weightOfAnds(Not(f1)) ==  pow(2, weightOfAnds(f1)))
+        assert (weightOfAnds(Not(f2)) ==  pow(2, weightOfAnds(f2)))
+
+        pow_monotone(weightOfAnds(f1), weightOfAnds(f2))
+
+        check (weightOfAnds(Not(f1)) <= weightOfAnds(Not(f2)))
+    }
+
+    def Rule3UnderNot2(f1 : FormulaT, f2 : FormulaT) : Unit = {
+        
+        require (weightOfAnds(f1) <  weightOfAnds(f2))
+
+        assert (weightOfAnds(Not(f1)) ==  pow(2, weightOfAnds(f1)))
+        assert (weightOfAnds(Not(f2)) ==  pow(2, weightOfAnds(f2)))
+
+        pow_monotone_strict(weightOfAnds(f1), weightOfAnds(f2))
+
+        check (weightOfAnds(Not(f1)) < weightOfAnds(Not(f2)))
+    }
+
+    def applyRule(f : FormulaT,
+        orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
+
+        require (orsAboveLeft >= 0)
+        require (andsAboveLeft >= 0)
+        require (validFormulaT(f))
+        // decreases (f)
+        val res : FormulaT = applyAtTop(f, orsAboveLeft, andsAboveLeft)
+
+        if (res != f) {
+            res
+        } else if (f.isInstanceOf[Or]) {
+            val Or(f1, f2) = f
+            val f1_step = applyRule(f1, orsAboveLeft, andsAboveLeft)
+            f1_step
+    
+            if (f1 == f1_step) {
+                val f2_step = applyRule(f2, orsAboveLeft + 1, andsAboveLeft)
+                // assert equivalent(f.f2, f2_step);
+                // assert equivalent(Or(f.f1, f.f2), Or(f.f1, f2_step));
+                val res = Or(f1, f2_step)
+                if (weightOfAnds(f2_step) < weightOfAnds(f2)) {
+                    Rule3Or(f1, f2, f2_step)
+                }
+                res
+            } else {
+                // assert equivalent(f.f1, f1_step)
+                // assert equivalent(Or(f.f1, f.f2), Or(f1_step, f.f2))
+                val res = Or(f1_step, f2)
+                if (weightOfAnds(f1_step) < weightOfAnds(f1)) {
+                    Rule3Or(f2, f1, f1_step)
+                }
+                res
+            }
+
+        // } else {
+        //     f
+        // }
+        } else if(f.isInstanceOf[And]) {
+            val And(f1, f2) = f
+            val f1_step = applyRule(f1, orsAboveLeft, andsAboveLeft)
+            if (f1 == f1_step) {
+                val f2_step = applyRule(f2, orsAboveLeft, andsAboveLeft + 1)
+                val res = And(f1, f2_step)
+                res
+            } else {
+                val res = And(f1_step, f2)
+                res
+            }
+
+        // } else {
+        //     f
+        // }
+        } else if (f.isInstanceOf[Not]) {
+            val Not(f1) = f
+            assert (f ==  Not(f1))
+            var f1_step = applyRule(f1, orsAboveLeft, andsAboveLeft)
+            val res = Not(f1_step)
+            // Rule3UnderNot(f1_step, f1)
+            if (weightOfAnds(f1_step) < weightOfAnds(f1)) {
+                Rule3UnderNot2(f1_step, f1)
+            }
+            res
+        } else if (f.isInstanceOf[Var]) {
+            f
+        } else {
+            f
+        }
+
+        // f
+    }ensuring(res =>
+        (validFormulaT(res))
+        && (f == res || smaller(measure(res, orsAboveLeft, andsAboveLeft),
+            measure(f, orsAboveLeft, andsAboveLeft)))
+
+    )
+
+    def convertToCNF(f : FormulaT) : FormulaT = {
+
+
+        decreases (weightOfAnds(f), countDImplies(f), countImplies(f), countOrPairs(f, 0), countAndPairs(f, 0))               // 3 + 4 + 7 + 8 + 9
+        // decreases (countDImplies(f))         // 1
+        // decreases (countImplies(f))          // 2
+        // decreases (countOrPairs(f, 0))            // 5
+        // decreases (countAndPairs(f, 0))              // 6
+        require (validFormulaT(f))
+
+        val res = applyRule(f, 0, 0)
+        // assert equivalent(f, res)
+
+        if(res != f) {
+            convertToCNF(res)
+            // assert equivalent(res, r);
+            // equivalentTrans(f, res, r);
+        } else {
+            res
+        }
+    }
+    
 }
