@@ -118,18 +118,30 @@ package object utils {
             else
                 mult2_upper(x - 1)
         }
+    }.holds
+
+    def lessthan_mult_right(a : BigInt, b : BigInt, c : BigInt) : Unit = {
+    
+        require(a >= 1)
+        require(b >= 1)
+        require(c >= 1)
+        require(c < b)
+        
+        assert(a * c < a * b)
     }
 
-    // def lessthan_mult_right(a : BigInt, b : BigInt, c : BigInt) : Unit = {
-    
-    //     require(a >= 1)
-    //     require(b >= 1)
-    //     require(c >= 1)
-    //     require(c < b)
-        
-    //     assert(a * c < a)
+    // proven by default in dafny
+    def pow_increases(a : BigInt) : Boolean = {
 
-    // }
+        require(a >= 1)
+        
+        (a < pow(2, a)) because {
+            if (a == 1)
+                true
+            else
+                pow_increases(a - 1)
+        }
+    }.holds
 
 
 
