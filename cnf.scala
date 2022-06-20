@@ -315,7 +315,7 @@ package object cnf {
     ///// LEMMAS ////////
     /////////////////////
 
-    @induct
+    @induct // wont work withou induction
     def mult2_upper(x : BigInt) : Boolean = {
 
         require(x >= 0)

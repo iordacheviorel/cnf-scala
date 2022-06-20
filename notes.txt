@@ -111,3 +111,26 @@ def Rule5Prop(f1 : FormulaT, f2 : FormulaT, f3 : FormulaT, orsAboveLeft : BigInt
         check(countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) <
             countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft))
     }
+
+
+--------------
+
+induction is mandatory
+ // DONE
+    @induct // not holding without induction
+    def variablesUpToMonotone(f : FormulaT, n1 : BigInt, n2 : BigInt) : Boolean = {
+
+        require(variablesUpTo(f, n1) && (n1 <= n2))
+        
+        variablesUpTo(f, n2)
+    }.holds
+
+
+----
+
+    @induct // wont work withou induction
+    def mult2_upper(x : BigInt) : Boolean = {
+
+        require(x >= 0)
+        2 * x < 1+ pow(2, x)
+    }.holds

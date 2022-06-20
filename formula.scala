@@ -27,7 +27,7 @@ case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
     }
 
     // DONE
-    @induct
+    //@induct
     def maxVar(f: FormulaT) : BigInt = {
         require(validFormulaT(f))
 
@@ -71,7 +71,7 @@ case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
     )
 
     // DONE
-    @induct
+    //@induct
     def variablesUpTo(f: FormulaT, n: BigInt):  Boolean = { 
 
         f match {
@@ -93,7 +93,7 @@ case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
     }
 
     // DONE
-    @induct
+    @induct // not holding without induction
     def variablesUpToMonotone(f : FormulaT, n1 : BigInt, n2 : BigInt) : Boolean = {
 
         require(variablesUpTo(f, n1) && (n1 <= n2))
@@ -109,7 +109,7 @@ case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
     }.holds
 
     // DONE
-    @induct
+    //@induct
     def validFormulaT(f: FormulaT):  Boolean = {
     f match {
 
@@ -124,7 +124,7 @@ case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
     // CNF
     // 
     // def truthValue
-    @induct
+    //@induct
     def truthValue(f: FormulaT, assignment: List[Boolean]) : Boolean = {
         require(validFormulaT(f))
         require(variablesUpTo(f, assignment.size))
