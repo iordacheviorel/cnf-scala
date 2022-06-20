@@ -8,14 +8,14 @@ import stainless.proof._
 import utils._
 import stainless.annotation._
 
+// sealed trait FormulaT
 sealed trait FormulaT
-// abstract class FormulaT
-final case class Var(v: BigInt) extends FormulaT
-final case class Not(f1: FormulaT) extends FormulaT
-final case class Or(f1: FormulaT, f2: FormulaT) extends FormulaT
-final case class And(f1: FormulaT, f2: FormulaT) extends FormulaT
-final case class Implies(f1: FormulaT, f2: FormulaT) extends FormulaT
-final case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
+case class Var(v: BigInt) extends FormulaT
+case class Not(f1: FormulaT) extends FormulaT
+case class Or(f1: FormulaT, f2: FormulaT) extends FormulaT
+case class And(f1: FormulaT, f2: FormulaT) extends FormulaT
+case class Implies(f1: FormulaT, f2: FormulaT) extends FormulaT
+case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
 
   package object formula {
     def ok = {
@@ -177,5 +177,17 @@ final case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
     // def equivalentTrans
 
     // pretty print
+
+    // def equivalent(f1 : FormulaT, f2 : FormulaT) : Boolean = {
+
+    //     require (validFormulaT(f1))
+    //     require (validFormulaT(f2))
+
+    //     forall((tau : List[Boolean]) => variablesUpTo(f1, tau.size) &&
+    //         variablesUpTo(f2, tau.size) ==>
+    //         truthValue(f1, tau) == truthValue(f2, tau))
+
+    //     // assert (forall((i : List[BigInt]) => i.size == i.size))
+    // }.holds
 
 }

@@ -19,7 +19,7 @@ package object cnf {
     }
 
     // def applyRule1
-    
+
     def applyRule1(f : FormulaT, orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
 
         require(formula.validFormulaT(f))
@@ -30,8 +30,8 @@ package object cnf {
         val DImplies(f1, f2) = f
         val result = And(Implies(f1, f2), Implies(f2, f1))
 
-        assert(countDImplies(And(Implies(f1, f2), Implies(f2, f1))) ==
-            countDImplies(Implies(f1, f2)) + countDImplies(Implies(f2, f1)))
+        // assert(countDImplies(And(Implies(f1, f2), Implies(f2, f1))) ==
+        //     countDImplies(Implies(f1, f2)) + countDImplies(Implies(f2, f1)))
 
         assert(countDImplies(And(Implies(f1, f2), Implies(f2, f1))) ==
             2 * (countDImplies(f1) + countDImplies(f2)))
@@ -280,7 +280,7 @@ package object cnf {
         res => res >= 0
     )
 
-    // @induct
+
     def countOrPairs(f: FormulaT, orsAboveLeft : BigInt) : BigInt = {
         require(orsAboveLeft >= 0)
 
@@ -367,21 +367,21 @@ package object cnf {
         check(x + 0 == x)
     }
 
-    
+
     def Rule5Prop(f1 : FormulaT, f2 : FormulaT, f3 : FormulaT, orsAboveLeft : BigInt) : Unit = {
 
         require(orsAboveLeft >= 0)
 
-        check(countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft) ==
-            countOrPairs(f1, orsAboveLeft) + 
-            countOrPairs(f2, orsAboveLeft + 1) +
-            countOrPairs(f3, orsAboveLeft + 2) + orsAboveLeft + orsAboveLeft + 1)
-        check(countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) ==
-            countOrPairs(f1, orsAboveLeft) +
-            countOrPairs(f2, orsAboveLeft + 1) +
-            countOrPairs(f3, orsAboveLeft + 1) + orsAboveLeft + orsAboveLeft)
+        // check(countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft) ==
+        //     countOrPairs(f1, orsAboveLeft) + 
+        //     countOrPairs(f2, orsAboveLeft + 1) +
+        //     countOrPairs(f3, orsAboveLeft + 2) + orsAboveLeft + orsAboveLeft + 1)
+        // check(countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) ==
+        //     countOrPairs(f1, orsAboveLeft) +
+        //     countOrPairs(f2, orsAboveLeft + 1) +
+        //     countOrPairs(f3, orsAboveLeft + 1) + orsAboveLeft + orsAboveLeft)
         Rule5PropAux2(f3, orsAboveLeft + 1)
-        check(countOrPairs(f3, orsAboveLeft +1) <= countOrPairs(f3, orsAboveLeft + 2))
+        // check(countOrPairs(f3, orsAboveLeft +1) <= countOrPairs(f3, orsAboveLeft + 2))
         // countOrPairs(f3, orsAboveLeft + 1) <= countOrPairs(f3, orsAboveLeft + 2)
         check(countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) <
             countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft))
@@ -582,7 +582,7 @@ package object cnf {
 
         check (weightOfAnds(Not(f1)) < weightOfAnds(Not(f2)))
     }
-
+    
     def applyRule(f : FormulaT,
         orsAboveLeft : BigInt, andsAboveLeft : BigInt) : FormulaT = {
 
@@ -659,7 +659,7 @@ package object cnf {
             measure(f, orsAboveLeft, andsAboveLeft)))
 
     )
-
+    
     def convertToCNF(f : FormulaT) : FormulaT = {
 
 

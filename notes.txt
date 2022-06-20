@@ -45,3 +45,69 @@ predicate equivalent(f1 : FormulaT, f2 : FormulaT)
         variablesUpTo(f2, |tau|) ==>
         truthValue(f1, tau) == truthValue(f2, tau)
 }
+
+
+some catch:
+- Result for 'precond. (call truthValue(f2, tau) (require 2/2))' VC for equivalent @188:36:
+[[33mWarning [0m] !validFormulaT(f1) || !validFormulaT(f2) || !variablesUpTo(f1, size[Boolean](tau)) || variablesUpTo(f2, size[Boolean](tau))
+[[33mWarning [0m] formula.scala:188:36:  => INVALID
+                       truthValue(f1, tau) == truthValue(f2, tau)))
+                                              [31m^^^^^^^^^^^^^^^^^^^[0m
+[[33mWarning [0m] Found counter-example:
+[[33mWarning [0m]   tau: List[Boolean] -> Cons[Boolean](false, Nil[Boolean]())
+[[33mWarning [0m]   f1: FormulaT       -> Var(BigInt("0"))
+[[33mWarning [0m]   f2: FormulaT       -> Var(BigInt("2241"))
+
+
+
+[[34m  Info  [0m] ╟┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄╢
+[[34m  Info  [0m] ║ [32mtotal: 832  valid: 832  (832 from cache) invalid: 0    unknown: 0    time:     1.9[0m                                                              ║
+[[34m  Info  [0m] ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+[[34m  Info  [0m] Shutting down executor service.
+
+
+--------
+
+viordache@viordache:~/disertatie/cnf-scala$ date +"%T" && stainless *.scala > t.txt && date +"%T"
+16:13:53
+16:15:31
+[[34m  Info  [0m] ╟┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄╢
+[[34m  Info  [0m] ║ [32mtotal: 1472 valid: 1472 (615 from cache) invalid: 0    unknown: 0    time:    38.0[0m                                                                     ║
+[[34m  Info  [0m] ╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+[[34m  Info  [0m] Shutting down executor service.
+
+--------------
+talk about 
+def Rule5PropAux2(f : FormulaT, orsAboveLeft : BigInt) : Boolean = {
+        require (orsAboveLeft >= 0)
+
+        (countOrPairs(f, orsAboveLeft) <= countOrPairs(f, orsAboveLeft + 1)) because {
+            f match {
+                case Var(v)           => true
+                case Not(f1)          => Rule5PropAux2(f1, orsAboveLeft)
+                case Or(f1, f2)       => Rule5PropAux2(f1, orsAboveLeft) && Rule5PropAux2(f2, orsAboveLeft + 1)
+                case And(f1, f2)      => Rule5PropAux2(f1, orsAboveLeft) && Rule5PropAux2(f2, orsAboveLeft)
+                case Implies(f1, f2)  => Rule5PropAux2(f1, orsAboveLeft) && Rule5PropAux2(f2, orsAboveLeft)
+                case DImplies(f1, f2) => Rule5PropAux2(f1, orsAboveLeft) && Rule5PropAux2(f2, orsAboveLeft)
+            }
+        }   
+    }.holds
+
+def Rule5Prop(f1 : FormulaT, f2 : FormulaT, f3 : FormulaT, orsAboveLeft : BigInt) : Unit = {
+
+        require(orsAboveLeft >= 0)
+
+        // check(countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft) ==
+        //     countOrPairs(f1, orsAboveLeft) + 
+        //     countOrPairs(f2, orsAboveLeft + 1) +
+        //     countOrPairs(f3, orsAboveLeft + 2) + orsAboveLeft + orsAboveLeft + 1)
+        // check(countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) ==
+        //     countOrPairs(f1, orsAboveLeft) +
+        //     countOrPairs(f2, orsAboveLeft + 1) +
+        //     countOrPairs(f3, orsAboveLeft + 1) + orsAboveLeft + orsAboveLeft)
+        Rule5PropAux2(f3, orsAboveLeft + 1)
+        // check(countOrPairs(f3, orsAboveLeft +1) <= countOrPairs(f3, orsAboveLeft + 2))
+        // countOrPairs(f3, orsAboveLeft + 1) <= countOrPairs(f3, orsAboveLeft + 2)
+        check(countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) <
+            countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft))
+    }
