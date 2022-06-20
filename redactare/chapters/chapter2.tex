@@ -1,135 +1,287 @@
-\chapter{Tehnologii utilizate}
+\chapter{Solution proposed}
 
-\section{Introducere}
+\section{Implementation overview}
 
-Pentru partea de implementare am decis să aleg limbajul de programare Dafny. Acesta targhetează limbajul $C\#$ și suportă specificații formale prin intermediul precondițiilor, postcondițiilor și al invarianților. Limbajul combină paradigma de programare functională cu cea imperativă, având și un suport limitat pentru programarea orientată obiect. Dafny a fost realizat cu scopul de a oferi o introducere simplă în utilizarea specificațiilor și verificărilor formale. În prezent, este folosit în principal cu scop didactic, dar este utilizat și în competiții software ce vizează verificarea de programe.
+The implementation of the CNF conversion algorithm is done using three main methods:
+\texttt{applyAtTop}, \texttt{applyRule}, and \texttt{convertToCNF}. The code snippets 
+that follow contain the full specifications, preconditions and postconditions, but the
+implementation is partially skipped 
+The \texttt{applyAtTop} receives a formula f. If f can be changed using one of
+the nine equivalences then it returns the new version, if not, the initial formula
+is returned. The \texttt{measure} function return a tuple that is used as the variant
+for the termination condition.
 
-\section{Dafny}
+\begin{lstlisting}[language=Scala, caption={Method \texttt{applyAtTop}}]
+def applyAtTop(f : FormulaT, orsAboveLeft : BigInt, 
+        andsAboveLeft : BigInt) : FormulaT = {
+require (orsAboveLeft >= 0)
+require (andsAboveLeft >= 0)
+require (validFormulaT(f))
+f match {
+    case DImplies(f1, f2) => applyRule1(f, orsAboveLeft, andsAboveLeft)
+    case Implies(f1, f2)  => applyRule2(f, orsAboveLeft, andsAboveLeft)
+    case Or(f1, f2)       => {        
+        if(f2.isInstanceOf[And]) {
+            applyRule3(f, orsAboveLeft, andsAboveLeft)}
+        [...]}
+    [...]}
+    [...]
+} ensuring(res =>
+(validFormulaT(res))
+    && (if (f == res) !f.isInstanceOf[Implies] else true)
+    && (if (f == res) !f.isInstanceOf[DImplies] else true)
+    && (f == res || smaller(measure(res, orsAboveLeft, andsAboveLeft),
+    measure(f, orsAboveLeft, andsAboveLeft))))
+\end{lstlisting}
 
-În continuare, sunt descrise functionalitățile principale ale limbajului, necesare în verificarea corectitudinii algoritmilor abordați. 
 
-\subsection{Precondiții si postcondiții}
+We also define 9 methods: \texttt{applyRule1, applyRule2, ... applyRule9} 
+which apply the coresponding rule given the assurance that the input formula
+has a specific format. For example, \texttt{applyRule1} will require a formula
+where the root node is a double implication.
 
-Precondițiile și postcondițiile sunt utilizate pentru a defini comportamentul unei metode sau al unei funcții. În cadrul unei metode, acestea vizează proprietăti ale argumentelor metodei și ale atributelor obiectului de care aparține metoda. În continuare, vom face referire la ele și prin termenul de \textit{adnotări}. 
+\begin{lstlisting}[language=Scala, caption={Method \texttt{applyRule1}}]
+def applyRule1(f : FormulaT, orsAboveLeft : BigInt, 
+        andsAboveLeft : BigInt) : FormulaT = {
+    require(formula.validFormulaT(f))
+    require(f.isInstanceOf[DImplies])
+    require(orsAboveLeft >= 0)
+    require(andsAboveLeft >= 0)
+    val DImplies(f1, f2) = f
+    val result = And(Implies(f1, f2), Implies(f2, f1))
+    [...] // assertions necessary for verification
+    result
+} ensuring(res =>
+    (validFormulaT(res))
+    && (weightOfAnds(res) <= weightOfAnds(f))
+    && (countDImplies(res) < countDImplies(f))
+    && smaller(measure(res, orsAboveLeft, andsAboveLeft),
+        measure(f, orsAboveLeft, andsAboveLeft)))           
+\end{lstlisting}
 
-\begin{definition}
-O precondiție este o condiție (sau un predicat) care trebuie să fie adevarată imediat înainte de inceperea execuției unei metode. 
-\end{definition}
+The method \texttt{applyRule} a formula and propagates the \texttt{applyAtTop} method
+down the tree for \texttt{And, Or} and \texttt{Not} nodes. Calling this method will
+trigger only one rule application.
 
-\begin{definition}
-O postcondiție este o condiție (sau un predicat) care trebuie să fie adevarată imediat după execuția unei metode. 
-\end{definition}
+\begin{lstlisting}[language=Scala, caption={Method \texttt{applyRule}}]
+def applyRule(f : FormulaT, orsAboveLeft : BigInt, 
+        andsAboveLeft : BigInt) : FormulaT = {
+    require (orsAboveLeft >= 0)
+    require (andsAboveLeft >= 0)
+    require (validFormulaT(f))
+    val res : FormulaT = applyAtTop(f, orsAboveLeft, andsAboveLeft)
+    if (res != f) {
+        res // no further changes needed
+    } else if (f.isInstanceOf[Or]) {
+        val Or(f1, f2) = f // destruct f knowing the root node
+        val f1_step = applyRule(f1, orsAboveLeft, andsAboveLeft)
+        f1_step
+        [...]} // treat the rest of the cases with Or root
+    [...] // treat the rest of the cases
+}ensuring(res =>
+    (validFormulaT(res))
+    && (f == res || smaller(measure(res, orsAboveLeft, andsAboveLeft),
+        measure(f, orsAboveLeft, andsAboveLeft))))
+\end{lstlisting}
 
-În ambele cazuri, dacă adnotările nu sunt îndeplinite, efectul metodei vizate devine nedefinit. 
-De obicei, aceste adnotări sunt incluse doar în documentația secțiunii de cod vizate. În alte limabaje, precondițiile sunt uneori testate utilizând \textit{gărzi} sau \textit{aserțiuni}.
+\texttt{convertToCNF} is the entry method in the algorithm. It calls \texttt{applyRule}
+in a loop until there are no changes made to the formula. The \texttt{decreases} annotation
+for this method is a 5-uple of variants that represent the termination measure of the implementation.
+The termination method will not be further explained as it is already covered as part
+of the bachelor's thesis\cite{licenta}.
 
-Trebuie mentionat faptul că, în cadrul contextului în care este apelată metoda, postcondițiile acesteia pot fi folosite mai departe, fiind considerate cunostiințe despre comportamentul programului.
+\begin{lstlisting}[language=Scala, caption={Method \texttt{applyRule}}]
+def convertToCNF(f : FormulaT) : FormulaT = {
+    decreases (weightOfAnds(f), countDImplies(f), 
+        countImplies(f), countOrPairs(f, 0), countAndPairs(f, 0))
+    require (validFormulaT(f))
 
-Exemplu de metodă ce conține o precondiție si o postcondiție:
-\begin{figure}[H]
-    \caption{Exemplu de adnotări}
-
-\begin{Verbatim}[fontsize=\small, frame=single,baselinestretch=0.1]
-method MultipleReturns(x: int, y: int) returns (a: int, b: int)
-   requires y > 0
-   ensures a < x < b
-{
-   a := x - y;
-   b := x + y;
+    val res = applyRule(f, 0, 0)
+    if(res != f) {
+        convertToCNF(res)
+    } else {
+        res
+    }
 }
-\end{Verbatim}
-\end{figure}
+\end{lstlisting}
 
-\subsection{Aserțiuni}
 
-\begin{definition}
-O aserțiune (assert) este un predicat plasat în interiorul unei metode. Aceasta garantează că o expresie booleană este intotdeauna adevarată, când se ajunge la instructiunea de cod respectivă.
-\end{definition}
+\section{Comparison between Dafny and Stainless}
 
-Aserțiunile pot avea diferite utilizări, dar cea mai importantă este aceea de a verifica dacă asteptările noastre despre ceea este \textit{adevărat} este actualmente cunoscut de către program. Acestea sunt o unealtă foarte bună în a corecta greseli în scrierea de adnotări, verificând ce este capabil compilatorul să demonstreze despre starea curentă a programului.
+In this section we will discuss the main differences between the two tools. The usual differences
+like syntax, and dependencies will not be treated as we focus on the specific elements that influence
+the formal verification development flow.
 
-De menționat faptul că deși este verificată existența unei proprietăți în cadrul metodei utilizând aserțiuni, aceasta nu poate fi folosită în exteriorul metodei. Pentru a obține comportamentul mentionat anterior este necesară utilizarea postcondițiilor.
+\subsection{Performance}
 
-Fie \textit{$pow$}, funcția de ridicare la putere: \textit{$pow(a,b) = a^b$}. Fie $a \geq 2, a \in \mathbb{N}.$ 
+\emph{All the tests are performed on Stainless version 0.9.4 using a standard laptop: AMD Ryzen 7 4700U (2.0 GHz), 16GB RAM and Ubuntu 16.04.7 LTS.}
 
-Presupunere: compilatorul nu dispune de destui pași de verificare pentru a demonstra că $ 4 * pow(2, a) <= pow(2, a) * pow(2, a * a).$ Compilatorul poate fi ajutat printr-un \textit{assert} ($assert$ $4 <= pow(2, a);$) ce furnizează date utile, scăzând numărul de pași necesari în verificarea primei inegalități. 
+From the start we notice that code compilation in scala is slower. This is a known factor that one 
+should expect, even without using Stainless. A first factor would be that the program 
+is ran on a JVM so start up times are slow, up to 2-4 seconds. If the setup is correct, this will
+be mitigated by the compiler being kept in a running JVM. SBT as well as IDEs can handle this.
+The authors of Stainless already provide a sbt template project in our aide. \cite{sbt}
 
-\begin{figure}[H]
-    \caption{Exemplu de utilizare al aserțiunilor.}
+In order to improve the performance, Stainless uses a persistent cache mechanism to speed up
+verification times. By doing this, the only solution for the developer is to write the program
+in an incremental way, and compile the solution after each piece of the proof. While
+breaking down the proof into smaller methods is a general clean code strategy that adds a boost 
+of performance in Dafny, it is \emph{mandatory}
+when writing non trivial programs in Stainless. Even if it wasn't the case in for this algorithm, one
+can expect the need to refactor bigger proofs into smaller predicates and lemmas when porting a project.
 
-\begin{Verbatim}[fontsize=\small, frame=single,baselinestretch=0.1]
-   assert 4 <= pow(2, a);
-   assert 4 * pow(2, a) <= pow(2, a) * pow(2, a * a);
-\end{Verbatim}
+The method which pushes the verification engine to the edge is \texttt{applyRule} where the verification time
+is bigger than expected without the proper verification: the compilation crashed over 10 minutes for the whole method. 
+Initially, the solution was to perform the verification for each of the rules and verify partial proofs in
+several sessions. While this approach is not the most elegant one, it is business as usual when 
+writing a proof for the first time. After some improvements, Stainless manages to compile the method without the
+workaround mentioned above.
 
-\end{figure}
+Using Stainless, the verification times is under one second for common proofs like \texttt{Rule5Prop} 
+and a couple of seconds when infering and using their results in more complex ones like \texttt{applyAtTop}.
+This means that when trying to compile from ground up the whole project the duration will reach 2 minutes.
+Meanwhile, Dafny will perform the same verifications in under 1 minute\cite{wollic}.
 
-\subsection{Leme}
+\newpage
 
-Uneori, pentru a putea demonstra o proprietate, este necesară execuția unei serii considerabile de pași de verificare. În aceste cazuri, compilatorul poate fi asistat prin intermediul lemelor.
+\subsection{Induction}
 
-O lemă este o teormă utilizată pentru demonstrarea unei alte proprietăți/teoreme mai complexe. Utilizarea lor permite compilatorului să împartă o problemă complexă în mai multe părți, mai ușor de abordat.
+In order to verify a program written in Scala, it has to be implemented using a purely
+functional subset of the language, which the authors of Stainless call \emph{Pure Scala}\cite{pure_scala}.
 
-În cadrul implementării, o lemă poate fi considerată o metodă de tip \textit{ghost}, care are ca și postcondiție proprietatea dorită.
+One of the top-level declarations supported is an Algebraic Data Type (ADT)\cite{pure_scala}
 
-\begin{definition}
-O metodă sau un atribut de tip \textit{ghost} are rol exculsiv în verificarea corectitudinii programului și nu afectează execuția acestuia. Funcțiile pot fi doar de tipul \textit{ghost}.
-\end{definition}
+We define our data type for a formula as follows:
 
-Când este apelată o lemă, informațiile furnizate de postcondițiile acesteia sunt utilizate în contextul actual. Urmatoarea lemă demonstrează că $\forall a, b \in \mathbb{N}, a, b \geq 2 : 2^a * 2^b = 2^{a + b}.$ 
+\begin{lstlisting}[language=Scala, caption={ \texttt{FormulaT} data type}]
+sealed abstract class FormulaT
+case class Var(v: BigInt) extends FormulaT
+case class Not(f1: FormulaT) extends FormulaT
+case class Or(f1: FormulaT, f2: FormulaT) extends FormulaT
+case class And(f1: FormulaT, f2: FormulaT) extends FormulaT
+case class Implies(f1: FormulaT, f2: FormulaT) extends FormulaT
+case class DImplies(f1: FormulaT, f2: FormulaT) extends FormulaT
+\end{lstlisting}
 
-\begin{figure}[H]
-    \caption{Utilizarea unei leme.}
+We notice methods where the verification can not succeed if we do not specify the usage of 
+the \emph{induct} tactic by using \texttt{@induct}.
 
-\begin{Verbatim}[fontsize=\small, frame=single,baselinestretch=0.1]
+\begin{lstlisting}[language=Scala, caption={ Lemmas with mandatory induction}]
+@induct
+def variablesUpToMonotone(f : FormulaT, 
+        n1 : BigInt, n2 : BigInt) : Boolean = {
+    require(variablesUpTo(f, n1) && (n1 <= n2))
+    variablesUpTo(f, n2)
+}.holds
 
-lemma Property1(a : int, b : int)
- requires a >=2;
- requires b >=2;
-ensures pow(2, a) * pow(2, b) == pow(2, a + b);
-{
-   if(b > 2)
-   {
-     Property1(a, b - 1);
-   }
-   assert pow(2, a) * pow(2, 2) == pow(2, a + 2);
+@induct
+def mult2_upper(x : BigInt) : Boolean = {
+
+    require(x >= 0)
+    2 * x < 1+ pow(2, x)
+}.holds
+\end{lstlisting}
+
+During the implementation I use this feature only when is mandatory as it 
+can slow down the verification time or even invalidate the proof. 
+For example,by addnotating two measure functions to use the induction tactic 
+I notice that if the behaviour is too complex the verification will fail.
+In the following listing are two recursive functions that call only themselves and 
+\texttt{pow}. The verification will fail only for \texttt{weightOfAnds} when trying to use induction.
+
+\begin{lstlisting}[language=Scala, caption={ Lemmas with mandatory induction}]
+@induct // verification fails
+def weightOfAnds(f : FormulaT) : BigInt = {
+f match {
+  case Var(v)     => BigInt(2)
+  case Not(f1)    => pow(2, weightOfAnds(f1))
+  case Or(f1, f2) => weightOfAnds(f1) * weightOfAnds(f2)
+  case And(f1, f2) => weightOfAnds(f1) + weightOfAnds(f2) + 1
+  case Implies(f1, f2)  => pow(2, weightOfAnds(f1)) * weightOfAnds(f2)
+  case DImplies(f1, f2) => 
+      pow(BigInt(2), weightOfAnds(f1)) * weightOfAnds(f2) +
+      pow(BigInt(2), weightOfAnds(f2)) * weightOfAnds(f1) + 1
 }
-\end{Verbatim}
+} ensuring(
+    res => res >= 2)
 
-\end{figure}
-
-\subsection{Condiții de terminare}
-\label{Condiții de terminare}
-Dafny oferă o modalitate prin care se poate demonstra că execuția unui program se termină (că nu se intră într-o buclă infinită), utilizând adnotări de descrestere. Pentru fiecare buclă sau recursie, este necesară o adnotare care să specifice o proprietate pozitiv enumerabilă a stării programului care descrește strict. Devreme ce proprietatea respectivă trebuie să fie pozitivă, aceata este marginită inferior, iar o enumerație strict descrescătoare nu poate fi decât finită.
-
-Există cazuri în care pentru a demonstra terminarea, este necesară utilizarea mai multor proprietăți $p_1, p_2, ..., p_n$ cu urmatoarea precizare: dacă proprietatea $p_i, \forall i \in [1, n-1]$ ramâne constantă, atunci o proprietate din intervalul $[i+1, n]$ va trebui să descrească strict. Cu alte cuvinte, proprietățile descresc în ordinea în care au fost enumerate în adnotare.
-
-De exemplu, în implementarea funcției \textit{pow}, terminarea este verificată utilizând parametrul \textit{power} a carui valoare descrește strict la fiecare apel recursiv.
-
-\begin{figure}[H]
-    \caption{Utilizarea condițiilor de terminare.	}
-
-\begin{Verbatim}[fontsize=\small, frame=single,baselinestretch=0.1]
-function pow(arg : int, power : int) : (res : int)
-  requires power >= 0;
-  requires arg > 0;
-  ensures res > 0;
-  decreases power; 
-{
-  if (power == 0) then
-    1
-  else
-    arg * pow(arg, power - 1)
+@induct // verification passes
+def countDImplies(f: FormulaT) : BigInt = {
+f match {
+  case Var(v)           => BigInt(0)
+  case Not(f1)          => countDImplies(f1)
+  case Or(f1, f2)       => countDImplies(f1) + countDImplies(f2)
+  case And(f1, f2)      => countDImplies(f1) + countDImplies(f2)
+  case Implies(f1, f2)  => countDImplies(f1) + countDImplies(f2)
+  case DImplies(f1, f2) => 1 + pow(2, countDImplies(f1) + countDImplies(f2))
 }
-\end{Verbatim}
-
-\end{figure}
-
-\section{Concluzii}
-
-Deși acest limbaj nu este utlizat frecvent în mod practic, ideea de a deascrie comportamentul unui program într-un format precis, care să poată fi utilizat ulerior pentru a  demonstra corectitudinea acestuia, este o abilitate interesantă și cu potențial mare de dezvoltare. Pe langă utilizarea lor în corectarea greșelilor, adnotările sunt foarte folositoare pentru viitorii programatori care vor revizui o implementare, acestea reflectând rezumativ comportamentul unor operații complexe.
-
-Ca orice tehnologie însă, vine și cu dezavantaje: deși se pot evita greșelile din cadrul unui program abstractizând comportamentul acestuia sub formă de adnotări, acestea din urmă, pot fi la rândul predispuse greșelilor.
+} ensuring(
+    res => res >= 0)
+\end{lstlisting}
 
 
+\subsection{Proof autonomy levels}
 
+Both tools show specific levels of autonomy depending on the context in which the verification
+process takes place. For example, Dafny is able to prove simple properties of the power function
+over integers without our help while Stainless requires input.
+
+\begin{lstlisting}[language=Scala, caption={ Lemmas with mandatory induction}]
+def pow_increases(a : BigInt) : Boolean = {
+    require(a >= 1)
+    (a < pow(2, a)) because {
+        if (a == 1) true
+        else        pow_increases(a - 1)
+    }
+}.holds
+
+def pow_monotone(a : BigInt, b : BigInt) : Boolean = {
+    require(0 <= a)
+    require(a <= b)
+    (pow(2, a) <= pow(2, b)) because {
+        if (a == b)  pow(2, a) == pow(2, b) 
+        else         pow_monotone(a, b - 1)
+    }
+}.holds
+\end{lstlisting}
+
+The \texttt{pow_increases} lemma states that $\forall a \in \mathbb{N}, a < 2 ^{a}$ while \texttt{pow_monotone}
+states that $\forall a, b \in \mathbb{N}, a \leq b  \Rightarrow 2 ^{a} \leq 2 ^{b}$.
+
+Another example of function, that has a \texttt{FormulaT} type parameter this time, is \texttt{Rule5PropAux}.
+This lemma states that the measure function \texttt{countOrPairs} 
+evaluation monotonically increases when the parameter \texttt{orsAboveLeft} is incremented.
+While this is proven by default in Dafny, here we have to manually tell the verification engine 
+to make a recursive verification by calling the lemma over the child nodes of the formula.
+
+
+Based on the examples above, Stainless seems to lack autonomy for \emph{simple} inductive proofs.
+When it comes to demonstrations where we use a chain of assertions the level of autonomy is higher 
+than in Dafny.
+
+\begin{lstlisting}[language=Scala, caption={Lemma \texttt{Rule5Prop}}]
+// verification in dafny
+lemma Rule5Prop(f1 : FormulaT, f2 : FormulaT, f3 : FormulaT,
+    orsAboveLeft : int)
+    requires orsAboveLeft >= 0;
+    ensures countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) <
+        countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft);
+{
+    assert countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft) ==
+        countOrPairs(f1, orsAboveLeft) + countOrPairs(f2, orsAboveLeft + 1) +
+        countOrPairs(f3, orsAboveLeft + 2) + orsAboveLeft + orsAboveLeft + 1;
+    assert countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) ==
+        countOrPairs(f1, orsAboveLeft) +
+        countOrPairs(f2, orsAboveLeft + 1) +
+        countOrPairs(f3, orsAboveLeft + 1) + orsAboveLeft + orsAboveLeft;
+    Rule5PropAux(f3, orsAboveLeft + 1);
+    assert countOrPairs(f3, orsAboveLeft + 1) 
+            <= countOrPairs(f3, orsAboveLeft + 2); 
+    assert countOrPairs(Or(Or(f1, f2), f3), orsAboveLeft) <
+        countOrPairs(Or(f1, Or(f2, f3)), orsAboveLeft);
+}
+\end{lstlisting}
+
+The lema above is extracted from \emph{Verifying the Conversion into CNF in Dafny} \cite{wollic}.
+Here, Stainless needs only the call to \texttt{Rule5PropAux}
+and the last assertion in order to obtain the same proof.

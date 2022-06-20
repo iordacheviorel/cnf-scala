@@ -3,25 +3,4 @@
 
 
 
-This work has the goal to verify the correctness propositional 
-logical algorithms while providing a comparison between the 
-languages used in obtaining the demonstrations. By correct we 
-understand both the lack of errors at run time and the concordance 
-between what the program does and the authors intents.
 
-In practice, an attempt of proving the correctness of a program 
-is done by testing but there are instances of complex problems 
-where this is not enough.
-
- 
-
-We present two computer-verified implementations of the CNF
-conversion for propositional logic. The two implementations are
-fully verified: functional correctness and termination is
-machine-checked using the Dafny language while only one of them 
-is also implemented in scala. The first approach is
-based on repeatedly applying a set of equivalences and is often
-presented in logic textbooks. The second approach is based on
-Tseitin's transformation and is more efficient. We present the main
-ideas behind our formalization and we discuss the main difficulties
-in verifying the two algorithms.

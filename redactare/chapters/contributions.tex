@@ -1,29 +1,16 @@
 \chapter*{Contributions} 
 \addcontentsline{toc}{chapter}{Contributions}
 
-\emph{First contribution.} We verify that an algorithm based
-on applying the nine equivalences above is functionally correct. The
-most difficult part is to prove termination, for which we use a
-carefully designed 5-tuple as a variant. To our knowledge, this is
-incidentally the first proof (paper or computer-checked) of
-termination of the nine rules. Indeed, in all logic textbooks that we
-surveyed, termination is only proved for a certain strategy (first
-applying rules 1 and 2, then finding a NNF using rules 7-9, etc.) of
-applying the rules. The interest into this is of theoretical interest,
-since other strategies (such as bringing the formula into NNF first)
-are easier to prove.
+\emph{First contribution.} The thesis provides a practical comparison between Dafny and Stainless Scala
+by implementing the same algorithm in both tools. I believe the findings obtained can be used in educational 
+ways by other students who want to approach a tool specific for formal verification.
 
-\emph{Second contribution}. We verify an implementation of Tseitin’s
-transformation in Dafny. The main difficulty is to find the right
-inductive invariant. There are also some technical difficulties with
-the verification: our implementation pushes the prover to its limits
-and requires carefully designed lemmas, helper predicates, and
-assertions in order to verify successfully. For this approach,
-termination is established by Dafny automatically, since the function
-is recursive on the formula ADT. To our knowledge, this is the first
-auto-active proof of Tseitin's transformation.
+\emph{Second contribution.} We prove, using Stainless Scala, that the algorithm based on applying 
+in a recursive way nine propositional equivalences is functionally corect. The most difficult part
+of the verification was to prove that the recursion terminates. In order to do so, I use a 5-tuple
+variant that denotes the decreasing measure which was already defined as part of my bachelor's thesis. todo cite
 
-\emph{Third contribution}. We verify the first algorithm both in Dafny and Scala (using the 
-Stainless tool). By doing this, we create a comparison between 
-the two languages highlighting the advantages and disadvantages of 
-each other over a complex example.
+After surveying the literature specific in this domain, I could not find another proof of the termination
+of the nine rules approach neither on paper nor computer-checked. Other approaches that we find apply
+the rules in a specific order. For example, a simpler solution would be to remove the implications and 
+double implications and then obtaining the NNF using the rules related to removing negations.

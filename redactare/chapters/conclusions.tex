@@ -1,4 +1,20 @@
 \chapter*{Conclusions} 
 \addcontentsline{toc}{chapter}{Conclusions}
 
-to be done
+Both tools come with advantages and disadvantages. One may choose one over the other
+based the nature of the algorithm he wants to verify. 
+
+If the verification time is important and the implementation suffers a lot of changes
+then Dafny would be the better choice. At the opposite, if the proofs are written in an 
+incremental approach, without too many changes once formulated, Stainless is also a viable option.
+
+When it comes to the level of autonomy, Dafny excels at proving smaller properties 
+by default, while Stainless offers better support for assertions where we are also
+able to specify their scope. These differences may become relevant in certain circumstances but
+both tools will need our help for more \emph{complex} proofs.
+
+There is still room for improvement when it comes to the support offered through predefined
+datastructures and functions.
+None of them contain support for common math operations, like the power function which is used often
+times in the implemenation. The Stainless library offers limited support for collections and math
+functions.

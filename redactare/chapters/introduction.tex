@@ -1,55 +1,36 @@
 \chapter*{Introduction} 
 \addcontentsline{toc}{chapter}{Introduction}
 
+% aceasta va conține motivația alegerii temei, gradul de noutate a temei,
+% obiectivele generale ale lucrării, metodologia folosită, descrierea sumară a soluției,
+% structura lucrării (titlul capitolelor și legătura dintre ele). Introducerea nu se
+% numerotează ca celelalte capitole.
+
+%introducere
+The thesis presents the differences between Dafny and Stainless using the
+implementation of the textbook conversion into CNF for propositional logic formulaes as an example.
+The two implemenatations of the algorithm are fully verified meaning that they provide
+proof of termination which is machine-checked and functional corectness.
+
+By functional corectness we understand the degree to witch our implementation provides
+the correct or expected results. We may want to have this assurance because programs
+perform the actions they are \textit{told} to, not the ones we intend them to.
+In industry, the corectness of programs is checked, partially, by testing. Even so, there
+are instances where the functional corectness of a complex task can not be proven or satisfied
+by conventional means.
+
+%motivația alegerii temei
+The reason for this comparison between formal verification tools arises from
+the fact that while being similar at a first glance they have their own peculiarities
+which may help us choose one over the other as the better candidate for a specific problem.
 
 
-Several computer-checked solvers for the boolean satisfiability
-problem have emerged relatively
-recently~\cite{DBLP:journals/jar/Maric09,DBLP:conf/vmcai/OeSOC12,DBLP:journals/jar/BlanchetteFLW18,DBLP:conf/nfm/Fleury19}. Most
-SAT solvers work with CNF-SAT, where the input formula is known to be
-in conjunctive normal form. This is not a limitation, since efficient
-algorithms to find the CNF of any formula are known. In this article,
-we address the problem of finding the CNF of a formula and we verify
-in the Dafny~\cite{DBLP:conf/icse/Leino04} language two such algorithms.
-
-The first approach that we verify is based on the standard textbook
-algorithm of applying a series of equivalences from left to right as
-long as possible. We work with the following nine equivalences:
-
-\begin{enumerate}
-    \item $( \varphi_1 \Leftrightarrow \varphi_2) \equiv ((\varphi_1 \Rightarrow \varphi_2) \land (\varphi_2 \Rightarrow \varphi_1));$
-    \item $(\varphi_2 \Rightarrow \varphi_1) \equiv (\neg \varphi_1 \lor \varphi_2)$
-    \item $(\varphi_1 \lor (\varphi_2 \land \varphi_3)) \equiv ((\varphi_1 \lor \varphi_2) \land (\varphi_1 \lor \varphi_3));$
-    \item $((\varphi_2 \land \varphi_3) \lor \varphi_1) \equiv ((\varphi_2 \lor \varphi_1) \land (\varphi_3 \lor \varphi_1));$
-    \item $(\varphi_1 \lor (\varphi_2 \lor \varphi_3)) \equiv ((\varphi_1 \lor \varphi_2) \lor \varphi_3));$
-    \item $(\varphi_1 \land (\varphi_2 \land \varphi_3)) \equiv ((\varphi_1 \land \varphi_2) \land \varphi_3));$
-    \item $\neg (\varphi_1 \lor \varphi_2) \equiv (\neg \varphi_1 \land \neg \varphi_2);$
-    \item $\neg (\varphi_1 \land \varphi_2) \equiv (\neg \varphi_1 \lor \neg \varphi_2);$
-    \item $\neg \neg \varphi \equiv \varphi;$
-\end{enumerate}
-
-The first two equivalences remove implications and double
-implications, equivalences three and four distribute disjunctions over
-conjunctions, equivalences five and six associate parentheses in a
-standard form and the last three are used to push negations towards
-the leaves.
-
-This approach has two advantages: it is simple and it does not
-introduce new variables. However, the disadvantage is that certain
-classes of formulae, such as
-$ (x_1 \land x_1') \lor (x_2 \land x_2') \lor \ldots \lor (x_n \land
-x_n')$ (\(n \geq 1 \)), lead to exponentially large CNFs.
+%gradul de noutate a temei
 
 
-
-The second approach that we verify is a so-called definitional
-CNF~\cite{harrison} based on Tseitin's transformation~\cite{man}. The idea is to
-create fresh boolean variables for each subformula. Each such fresh
-variable is constrained, by using carefully chosen clauses in the
-resulting CNF, to be equivalent to its associated subformula. This
-approach produces a CNF that is linear in the size of the given
-formula, with the theoretical disadvantage that the CNF is only
-equisatisfiable with the initial formula (not equivalent in general).
-
-
-
+%obiectivele generale ale lucrării
+The objective of this work is to provide a comparison by highlighting the advantages 
+and disadvantages of both tools when using them on a practical example. This paralel may
+come as useful to programmers who knows one of the languages and wants to explore the other, 
+wants to choose between them for their implemenation or other students who are learning  
+about formal verification.
