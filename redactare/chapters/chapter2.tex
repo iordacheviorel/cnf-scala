@@ -1,0 +1,135 @@
+\chapter{Tehnologii utilizate}
+
+\section{Introducere}
+
+Pentru partea de implementare am decis să aleg limbajul de programare Dafny. Acesta targhetează limbajul $C\#$ și suportă specificații formale prin intermediul precondițiilor, postcondițiilor și al invarianților. Limbajul combină paradigma de programare functională cu cea imperativă, având și un suport limitat pentru programarea orientată obiect. Dafny a fost realizat cu scopul de a oferi o introducere simplă în utilizarea specificațiilor și verificărilor formale. În prezent, este folosit în principal cu scop didactic, dar este utilizat și în competiții software ce vizează verificarea de programe.
+
+\section{Dafny}
+
+În continuare, sunt descrise functionalitățile principale ale limbajului, necesare în verificarea corectitudinii algoritmilor abordați. 
+
+\subsection{Precondiții si postcondiții}
+
+Precondițiile și postcondițiile sunt utilizate pentru a defini comportamentul unei metode sau al unei funcții. În cadrul unei metode, acestea vizează proprietăti ale argumentelor metodei și ale atributelor obiectului de care aparține metoda. În continuare, vom face referire la ele și prin termenul de \textit{adnotări}. 
+
+\begin{definition}
+O precondiție este o condiție (sau un predicat) care trebuie să fie adevarată imediat înainte de inceperea execuției unei metode. 
+\end{definition}
+
+\begin{definition}
+O postcondiție este o condiție (sau un predicat) care trebuie să fie adevarată imediat după execuția unei metode. 
+\end{definition}
+
+În ambele cazuri, dacă adnotările nu sunt îndeplinite, efectul metodei vizate devine nedefinit. 
+De obicei, aceste adnotări sunt incluse doar în documentația secțiunii de cod vizate. În alte limabaje, precondițiile sunt uneori testate utilizând \textit{gărzi} sau \textit{aserțiuni}.
+
+Trebuie mentionat faptul că, în cadrul contextului în care este apelată metoda, postcondițiile acesteia pot fi folosite mai departe, fiind considerate cunostiințe despre comportamentul programului.
+
+Exemplu de metodă ce conține o precondiție si o postcondiție:
+\begin{figure}[H]
+    \caption{Exemplu de adnotări}
+
+\begin{Verbatim}[fontsize=\small, frame=single,baselinestretch=0.1]
+method MultipleReturns(x: int, y: int) returns (a: int, b: int)
+   requires y > 0
+   ensures a < x < b
+{
+   a := x - y;
+   b := x + y;
+}
+\end{Verbatim}
+\end{figure}
+
+\subsection{Aserțiuni}
+
+\begin{definition}
+O aserțiune (assert) este un predicat plasat în interiorul unei metode. Aceasta garantează că o expresie booleană este intotdeauna adevarată, când se ajunge la instructiunea de cod respectivă.
+\end{definition}
+
+Aserțiunile pot avea diferite utilizări, dar cea mai importantă este aceea de a verifica dacă asteptările noastre despre ceea este \textit{adevărat} este actualmente cunoscut de către program. Acestea sunt o unealtă foarte bună în a corecta greseli în scrierea de adnotări, verificând ce este capabil compilatorul să demonstreze despre starea curentă a programului.
+
+De menționat faptul că deși este verificată existența unei proprietăți în cadrul metodei utilizând aserțiuni, aceasta nu poate fi folosită în exteriorul metodei. Pentru a obține comportamentul mentionat anterior este necesară utilizarea postcondițiilor.
+
+Fie \textit{$pow$}, funcția de ridicare la putere: \textit{$pow(a,b) = a^b$}. Fie $a \geq 2, a \in \mathbb{N}.$ 
+
+Presupunere: compilatorul nu dispune de destui pași de verificare pentru a demonstra că $ 4 * pow(2, a) <= pow(2, a) * pow(2, a * a).$ Compilatorul poate fi ajutat printr-un \textit{assert} ($assert$ $4 <= pow(2, a);$) ce furnizează date utile, scăzând numărul de pași necesari în verificarea primei inegalități. 
+
+\begin{figure}[H]
+    \caption{Exemplu de utilizare al aserțiunilor.}
+
+\begin{Verbatim}[fontsize=\small, frame=single,baselinestretch=0.1]
+   assert 4 <= pow(2, a);
+   assert 4 * pow(2, a) <= pow(2, a) * pow(2, a * a);
+\end{Verbatim}
+
+\end{figure}
+
+\subsection{Leme}
+
+Uneori, pentru a putea demonstra o proprietate, este necesară execuția unei serii considerabile de pași de verificare. În aceste cazuri, compilatorul poate fi asistat prin intermediul lemelor.
+
+O lemă este o teormă utilizată pentru demonstrarea unei alte proprietăți/teoreme mai complexe. Utilizarea lor permite compilatorului să împartă o problemă complexă în mai multe părți, mai ușor de abordat.
+
+În cadrul implementării, o lemă poate fi considerată o metodă de tip \textit{ghost}, care are ca și postcondiție proprietatea dorită.
+
+\begin{definition}
+O metodă sau un atribut de tip \textit{ghost} are rol exculsiv în verificarea corectitudinii programului și nu afectează execuția acestuia. Funcțiile pot fi doar de tipul \textit{ghost}.
+\end{definition}
+
+Când este apelată o lemă, informațiile furnizate de postcondițiile acesteia sunt utilizate în contextul actual. Urmatoarea lemă demonstrează că $\forall a, b \in \mathbb{N}, a, b \geq 2 : 2^a * 2^b = 2^{a + b}.$ 
+
+\begin{figure}[H]
+    \caption{Utilizarea unei leme.}
+
+\begin{Verbatim}[fontsize=\small, frame=single,baselinestretch=0.1]
+
+lemma Property1(a : int, b : int)
+ requires a >=2;
+ requires b >=2;
+ensures pow(2, a) * pow(2, b) == pow(2, a + b);
+{
+   if(b > 2)
+   {
+     Property1(a, b - 1);
+   }
+   assert pow(2, a) * pow(2, 2) == pow(2, a + 2);
+}
+\end{Verbatim}
+
+\end{figure}
+
+\subsection{Condiții de terminare}
+\label{Condiții de terminare}
+Dafny oferă o modalitate prin care se poate demonstra că execuția unui program se termină (că nu se intră într-o buclă infinită), utilizând adnotări de descrestere. Pentru fiecare buclă sau recursie, este necesară o adnotare care să specifice o proprietate pozitiv enumerabilă a stării programului care descrește strict. Devreme ce proprietatea respectivă trebuie să fie pozitivă, aceata este marginită inferior, iar o enumerație strict descrescătoare nu poate fi decât finită.
+
+Există cazuri în care pentru a demonstra terminarea, este necesară utilizarea mai multor proprietăți $p_1, p_2, ..., p_n$ cu urmatoarea precizare: dacă proprietatea $p_i, \forall i \in [1, n-1]$ ramâne constantă, atunci o proprietate din intervalul $[i+1, n]$ va trebui să descrească strict. Cu alte cuvinte, proprietățile descresc în ordinea în care au fost enumerate în adnotare.
+
+De exemplu, în implementarea funcției \textit{pow}, terminarea este verificată utilizând parametrul \textit{power} a carui valoare descrește strict la fiecare apel recursiv.
+
+\begin{figure}[H]
+    \caption{Utilizarea condițiilor de terminare.	}
+
+\begin{Verbatim}[fontsize=\small, frame=single,baselinestretch=0.1]
+function pow(arg : int, power : int) : (res : int)
+  requires power >= 0;
+  requires arg > 0;
+  ensures res > 0;
+  decreases power; 
+{
+  if (power == 0) then
+    1
+  else
+    arg * pow(arg, power - 1)
+}
+\end{Verbatim}
+
+\end{figure}
+
+\section{Concluzii}
+
+Deși acest limbaj nu este utlizat frecvent în mod practic, ideea de a deascrie comportamentul unui program într-un format precis, care să poată fi utilizat ulerior pentru a  demonstra corectitudinea acestuia, este o abilitate interesantă și cu potențial mare de dezvoltare. Pe langă utilizarea lor în corectarea greșelilor, adnotările sunt foarte folositoare pentru viitorii programatori care vor revizui o implementare, acestea reflectând rezumativ comportamentul unor operații complexe.
+
+Ca orice tehnologie însă, vine și cu dezavantaje: deși se pot evita greșelile din cadrul unui program abstractizând comportamentul acestuia sub formă de adnotări, acestea din urmă, pot fi la rândul predispuse greșelilor.
+
+
+
